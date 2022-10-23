@@ -1,0 +1,19 @@
+tools:
+  variogram:
+    title: Variogram fitting
+    description: Estimate an empirical variogram and fit a model
+    version: 1.0
+    cmd: python run.py 
+    parameters:
+      coordinates:
+        type: string
+      values:
+        type: string
+      n_lags: 
+        type: integer
+      model:
+        type: enum
+        values:
+          - spherical
+          - exponential
+          - gaussian
