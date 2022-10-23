@@ -11,6 +11,13 @@ def requirements():
         return f.read().splitlines()
 
 
+def version():
+    with open('toolbox_runner/__version__.py') as f:
+        loc = dict()
+        exec(f.read(), loc, loc)
+        return loc['__version__']
+
+
 setup(
     name='toolbox_runner',
     author='Mirko Mälicke',
@@ -19,7 +26,7 @@ setup(
     long_description=readme(),
     long_description_content_type='text/markdown',
     license='MIT',
-    version='0.0.2',
+    version=version(),
     packages=find_packages(),
     install_requires=requirements()
 )
