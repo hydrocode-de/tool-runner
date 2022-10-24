@@ -5,6 +5,8 @@ parse the tool configuration and the parameters.
 import os
 import json
 from yaml import load, Loader
+import numpy as np
+import pandas as pd
 
 
 CONF_FILE = '/src/tool.yml'
@@ -28,17 +30,31 @@ def _parse_param(key: str, val: str, param_config: dict):
     c = param_config[key]
 
     # handle arrays
-    if 'array' in c and c['array'] is True:
-        return val
+    if isinstance(val, (list, tuple)):
+        return [_parse_param(key, _, param_config) for _ in val]
     
+    # get type from tool yaml
     t = c['type'].strip()
-    if t == 'integer':
-        return int(val)
-    elif t == 'float':
-        return float(val)
-    elif t == 'enum' or t == 'string':
-        # here we could check the value
-        return val.strip()
+
+    # handle specific types
+    if t == 'enum':
+        val = val.strip()
+        if val not in c['values']:
+            raise ValueError(f"The value {val} is not contained in {c['values']}")
+        return val
+    elif t.lower() in ('datetime', 'date', 'time'):
+        # TODO: implement this
+        raise NotImplementedError
+    elif t == 'file':
+        # get the ext and use the corresponding reader
+        _, ext = os.path.splitext(val)
+        
+        # use numpy for matrix files
+        if ext.lower() == '.dat':
+            val = np.loadtxt(val)
+        elif ext.lower() == '.csv':
+            val = pd.read_csv(val)
+        return val
     else:
         return val
 

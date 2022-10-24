@@ -5,6 +5,7 @@ import shutil
 from datetime import datetime as dt
 
 import numpy as np
+import pandas as pd
 
 
 class Tool:
@@ -108,13 +109,21 @@ class Tool:
             # TODO: here we can add all kinds of parameter handling (ie. save files)
             if isinstance(value, np.ndarray):
                 # check if this parameter requires only a string
-                if self.parameters[key]['type'] == 'string':
+                if self.parameters[key]['type'] == 'file':
                     # save the params
-                    fname = f"{key}.txt"
+                    fname = f"{key}.dat"
                     np.savetxt(os.path.join(path, fname), value)
                     value = f"/in/{fname}"
                 else:
                     value = value.tolist()
+            elif isinstance(value, pd.DataFrame):
+                if self.parameters[key]['type'] == 'file':
+                    # save the params
+                    fname = f"{key}.csv"
+                    value.to_csv(fname)
+                    value = f"/in/{fname}"
+                else:
+                    value = value.values.tolist()
 
             # add
             params[key] = value
