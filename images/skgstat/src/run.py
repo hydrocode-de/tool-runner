@@ -15,17 +15,18 @@ toolname = os.environ.get('TOOL_RUN', 'variogram').lower()
 # switch the tool
 if toolname == 'variogram':
     # parse the coordinates and values arguments
-    coords = kwargs['coordinates']
-    if isinstance(coords, str):
-        # TODO: toolbox runner needs something for this
-        coords = np.loadtxt(coords)
+    # coords = kwargs['coordinates']
+    # if isinstance(coords, str):
+    #     # TODO: toolbox runner needs something for this
+    #     coords = np.loadtxt(coords)
 
-    values = kwargs['values']
-    if isinstance(values, str):
-        values = np.loadtxt(values)
+    # values = kwargs['values']
+    # if isinstance(values, str):
+    #     values = np.loadtxt(values)
     
-    # build the variogram
-    vario = skg.Variogram(coords, values, **{k: v for k,v in kwargs.items() if k not in ('coordinates', 'values')})
+    # # build the variogram
+    # vario = skg.Variogram(coords, values, **{k: v for k,v in kwargs.items() if k not in ('coordinates', 'values')})
+    vario = skg.Variogram(**kwargs)
 
     # create the output
     with open('/out/result.json', 'w') as f:

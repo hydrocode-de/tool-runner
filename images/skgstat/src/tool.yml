@@ -6,9 +6,9 @@ tools:
     cmd: python run.py 
     parameters:
       coordinates:
-        type: string
+        type: file
       values:
-        type: string
+        type: file
       n_lags: 
         type: integer
       model:

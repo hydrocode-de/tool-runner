@@ -7,7 +7,7 @@ RUN pip install scikit-gstat gstools plotly
 
 
 # install the Python toolbox-runner
-RUN pip install toolbox-runner
+RUN pip install toolbox-runner==0.1.1
 
 # create the tool input structure
 RUN mkdir /in
