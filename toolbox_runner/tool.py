@@ -95,7 +95,7 @@ class Tool:
         if result_path is not None:
             fname = os.path.join(result_path, f"{int(dt.now().timestamp())}_{self.name}")
             shutil.make_archive(fname, 'gztar', host_path)
-            return fname
+            return f"{fname}.tar.gz"
         else:
             return stdout
 

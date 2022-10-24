@@ -1,0 +1,21 @@
+tools:
+  foobar:
+    title: Foo Bar
+    description: A dummy tool to exemplify the YAML file
+    version: 0.1
+    parameters:
+      foo_int: 
+        type: integer
+      foo_float:
+        type: float
+      foo_string:
+        type: string
+      foo_enum:
+        type: enum
+        values:
+          - foo
+          - bar
+          - baz
+      foo_array:
+        type: integer
+        array: true
