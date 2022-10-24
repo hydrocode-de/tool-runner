@@ -17,3 +17,20 @@ tools:
           - spherical
           - exponential
           - gaussian
+          - matern
+          - stable
+      estimator:
+        type: enum
+        values:
+          - matheron
+          - cressie
+          - dowd
+      maxlag:
+        type: string
+      fit_method:
+        type: enum
+        values:
+          - trf
+          - lm
+          - manual
+      
