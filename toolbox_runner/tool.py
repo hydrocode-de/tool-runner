@@ -23,7 +23,7 @@ class Tool:
         # build conf
         self._build_config(**kwargs)
 
-    def run(self, host_path: str = None, result_path: str = None, **kwargs):
+    def run(self, host_path: str = None, result_path: str = None, keep_container: bool = False, **kwargs):
         """
         Run the tool as configured. The tool will create a temporary directory to
         create a parameter specification file and mount it into the container.
@@ -48,6 +48,11 @@ class Tool:
             A path on the host system, where the run environemtn will be archived to.
             This environment contains all input parameter files, all output files and
             a log of Stdout.
+        keep_container : bool, optional
+            If set to True, the container of the tool run will not be dropped after
+            execution. The resulting Step class can be used to package and archive
+            the step result along with the container and image as a 100% reproducible
+            tool run. Defaults to False.
         kwargs : dict, optional
             All possible parameters for the tool. These will be mounted into the
             tool container and toolbox_runner will parse the file inside the
@@ -82,8 +87,13 @@ class Tool:
         # build the parameter file
         self._build_parameter_file(path=in_dir, **kwargs)
 
+        # switch the keep container settings
+        if keep_container:
+            rm_set = f"--cidfile {os.path.join(host_path, '.containerid')}"
+        else:
+            rm_set = "--rm"
         # run
-        cmd = f"docker run --rm -v {in_dir}:/in -v {out_dir}:/out --env TOOL_RUN={self.name} --env PARAM_FILE=/in/tool.json {self.image}:{self.tag}"
+        cmd = f"docker run {rm_set} -v {in_dir}:/in -v {out_dir}:/out --env TOOL_RUN={self.name} --env PARAM_FILE=/in/tool.json {self.image}:{self.tag}"
         stream = os.popen(cmd)
 
         # save the stdout
