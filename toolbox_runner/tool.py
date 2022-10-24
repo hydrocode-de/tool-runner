@@ -106,7 +106,7 @@ class Tool:
         
         # check the parameters
         for key, value in kwargs.items():
-            # TODO: here we can add all kinds of parameter handling (ie. save files)
+            # Numpy arrays
             if isinstance(value, np.ndarray):
                 # check if this parameter requires only a string
                 if self.parameters[key]['type'] == 'file':
@@ -116,15 +116,26 @@ class Tool:
                     value = f"/in/{fname}"
                 else:
                     value = value.tolist()
+            
+            # data frames
             elif isinstance(value, pd.DataFrame):
                 if self.parameters[key]['type'] == 'file':
                     # save the params
                     fname = f"{key}.csv"
-                    value.to_csv(fname)
+                    value.to_csv(os.path.join(path, fname))
                     value = f"/in/{fname}"
                 else:
                     value = value.values.tolist()
-
+            
+            # JSON
+            elif isinstance(value, dict):
+                if self.parameters[key]['type'] == 'file':
+                    # save the params
+                    fname = f"{key}.json"
+                    with open(os.path.join(path, fname), 'w') as f:
+                        json.dump(value, f, indent=4)
+                    value = f"/in/{fname}"
+            
             # add
             params[key] = value
         
