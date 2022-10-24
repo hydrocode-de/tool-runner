@@ -54,7 +54,7 @@ def _parse_param(key: str, val: str, param_config: dict):
             val = np.loadtxt(val)
         elif ext.lower() == '.csv':
             val = pd.read_csv(val)
-        elif ext.lower() == 'json':
+        elif ext.lower() == '.json':
             with open(val, 'r') as f:
                 val = json.load(f)
         return val
