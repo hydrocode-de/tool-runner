@@ -1,8 +1,8 @@
 # Pull any base image that includes R
 FROM r-base:4.2.0
 
-# the parameter parsing function always needs the rjson package
-RUN R -e "install.packages('jsonlite')"
+# the parameter parsing function always needs the rjson and yaml packages
+RUN R -e "install.packages(c('jsonlite', 'yaml'))"
 
 # Do anything you need to install tool dependencies here
 RUN echo "Replace this line with a tool"

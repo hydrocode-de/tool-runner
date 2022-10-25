@@ -20,8 +20,8 @@ if (toolname == "foobar") {
     sink(f, append = TRUE)
     print("You have tried to run the tool 'foobar'.
 This tool is the template tool without any functionality.
-Please implement another tool in tool.json or select the
-tool you have already implemented.")
+Please implement another tool in or select the tool you 
+have already implemented.")
     print(params)
     sink()
 

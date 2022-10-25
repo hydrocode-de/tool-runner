@@ -22,7 +22,7 @@ get_parameters <- function() {
     params_names <- names(params)
 
     # parse the config yaml, directly access parameters section
-    config <- read_yaml("src/tool.yml")
+    config <- read_yaml(CONF_FILE)
     params_config <- config$tools[[TOOL]]$parameters
 
     # initiate list to save parsed parameters
@@ -31,18 +31,25 @@ get_parameters <- function() {
     # parse parameters
     for (name in params_names) {
         # type of the parameter
-        t <- param_config[[name]][["type"]]
+        t <- params_config[[name]][["type"]]
         # get the value
         val <- params[[name]]
 
         # handle specific types
         if (t == "enum") {
-            if (!(name %in% params_config[[name]]$values)) {
+            if (!(val %in% params_config[[name]]$values)) {
                 stop(paste("The value '", val, "' is not contained in [", paste(params_config[[name]]$values, collapse = " "), "]", sep = ""))
-            parsed_params <- c(parsed_params, name = val)
+            }
+            # save val to labeled list and append to parsed_params
+            l <- list(val)
+            names(l) <- name
+            parsed_params <- c(parsed_params, l)
         } else if (t %in% c("datetime", "date", "time")) {
            val <- as.POSIXct(val)
-           parsed_params <- c(parsed_params, name = val)
+           # save val to labeled list and append to parsed_params
+           l <- list(val)
+           names(l) <- name
+           parsed_params <- c(parsed_params, l)
         } else if (t == "file") {
             # get the ext and use the corresponding reader
             ext = tolower(xfun::file_ext())
@@ -52,9 +59,15 @@ get_parameters <- function() {
             } else if (ext == "csv") {
                 val <- read.csv(val)
             }
-            parsed_params <- c(parsed_params, name = val)
+            # save val to labeled list and append to parsed_params
+            l <- list(val)
+            names(l) <- name
+            parsed_params <- c(parsed_params, l)
         } else {
-            parsed_params <- c(parsed_params, name = val)
+            # save val to labeled list and append to parsed_params
+            l <- list(val)
+            names(l) <- name
+            parsed_params <- c(parsed_params, l)
         }
     }
 
