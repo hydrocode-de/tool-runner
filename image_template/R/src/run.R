@@ -18,7 +18,10 @@ if (toolname == "foobar") {
     
     # STDOUT.log: template tool warning message and parameters
     sink(f, append = TRUE)
-    print(paste(readLines("/in/STDOUT.txt", warn = FALSE), collapse = " "))
+    print("You have tried to run the tool 'foobar'.
+This tool is the template tool without any functionality.
+Please implement another tool in tool.json or select the
+tool you have already implemented.")
     print(params)
     sink()
 
