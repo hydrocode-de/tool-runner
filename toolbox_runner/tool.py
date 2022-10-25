@@ -9,9 +9,9 @@ import pandas as pd
 
 
 class Tool:
-    def __init__(self, name: str, image: str, tag: str, **kwargs):
+    def __init__(self, name: str, repository: str, tag: str, **kwargs):
         self.name = name
-        self.image = image 
+        self.repository = repository
         self.tag = tag
         self.valid = False
         
@@ -66,7 +66,6 @@ class Tool:
         """
         if not self.valid:
             raise RuntimeError('This tool has no valid configuration.')
-        pass
         
         # create a temporary directory if needed
         if host_path is None:
@@ -92,8 +91,9 @@ class Tool:
             rm_set = f"--cidfile {os.path.join(host_path, '.containerid')}"
         else:
             rm_set = "--rm"
+        
         # run
-        cmd = f"docker run {rm_set} -v {in_dir}:/in -v {out_dir}:/out --env TOOL_RUN={self.name} --env PARAM_FILE=/in/tool.json {self.image}:{self.tag}"
+        cmd = f"docker run {rm_set} -v {in_dir}:/in -v {out_dir}:/out --env TOOL_RUN={self.name} --env PARAM_FILE=/in/tool.json {self.repository}:{self.tag}"
         stream = os.popen(cmd)
 
         # save the stdout
@@ -169,9 +169,9 @@ class Tool:
 
     def __str__(self):
         if self.valid:
-            return f"{self.name}: {self.title}  FROM {self.image}:{self.tag} VERSION: {self.version}"
+            return f"{self.name}: {self.title}  FROM {self.repository}:{self.tag} VERSION: {self.version}"
         else:
-            return f"INVALID definition FROM {self.image}:{self.tag}"
+            return f"INVALID definition FROM {self.repository}:{self.tag}"
     
     def __repr__(self):
         return self.__str__()
