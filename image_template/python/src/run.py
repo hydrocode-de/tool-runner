@@ -12,7 +12,7 @@ toolname = os.environ.get('TOOL_RUN', 'foobar').lower()
 # switch the tool
 if toolname == 'foobar':
     # RUN the tool here and create the output in /out
-    with open('/out/RESULT.txt', 'w') as f:
+    with open('/out/STDOUT.log', 'w') as f:
         f.write('This toolbox does not include any tool. Did you run the template?\n')
 
 # In any other case, it was not clear which tool to run
