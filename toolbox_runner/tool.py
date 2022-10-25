@@ -146,6 +146,13 @@ class Tool:
                         json.dump(value, f, indent=4)
                     value = f"/in/{fname}"
             
+            # Copy any file source
+            elif isinstance(value, str):
+                if self.parameters[key]['type'] == 'file':
+                    fname = f"{key}.{os.path.splitext(value)[1]}"
+                    shutil.copy(value, os.path.join(path, fname))
+                    value = f"/in/{fname}"
+
             # add
             params[key] = value
         
