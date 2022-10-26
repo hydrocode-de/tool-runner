@@ -19,7 +19,10 @@ if toolname == 'profile':
 
     # generate the output
     profile.to_file('/out/report.html')
-    profile.to_json('/out/report.json')
+    js = profile.to_json()
+
+    with open('/out/report.json') as f:
+        f.write(js)    
 
 
 # In any other case, it was not clear which tool to run
