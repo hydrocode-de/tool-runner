@@ -1,12 +1,12 @@
 # Pull any base image that includes python3
-FROM python:3.10
+FROM python:3.10.8
 
 # install the toolbox runner tools
-RUN pip install toolbox-runner
+RUN pip install toolbox-runner>=0.2.2
 
 
-# Do anything you need to install tool dependencies here
-RUN echo "Replace this line with a tool"
+# install pandas and pandas-profiling
+RUN pip install pandas==1.5.1 pandas-profiling==3.4.0
 
 # create the tool input structure
 RUN mkdir /in

@@ -1,0 +1,10 @@
+tools:
+  profile:
+    title: Dataset Profile
+    description: Create a HTML or JSON profiling report for any kind of tabular data.
+    version: 0.1
+    parameters:
+      data: 
+        type: file
+        description: A CSV file containing the tabular data. From Python SDK, you can pass any pandas.DataFrame
+
