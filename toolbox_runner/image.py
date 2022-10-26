@@ -27,7 +27,7 @@ class Image:
         # build tool representations
         tools = []
         for tool_name, tool_conf in conf['tools'].items():
-            tools.append(Tool(tool_name, self.repository, self.tag, **tool_conf))
+            tools.append(Tool(tool_name, self.repository, self.tag, image=self.image, **tool_conf))
         
         if 'caching' in self._kwargs and not self._kwargs['caching']:
             return tools
