@@ -55,8 +55,8 @@ get_parameters <- function() {
             # get the ext and use the corresponding reader
             ext = tolower(file_ext(val))
             if (ext == "mat") {
-### extra package benötigt um .mat zu öffnen..
-                val <- read.table(val)
+                # matrix files: no header, no index
+                val <- read.csv(val, header = FALSE)
             } else if (ext == "csv") {
                 val <- read.csv(val)
             }
