@@ -1,3 +1,4 @@
+from typing import Union
 import os
 import json
 import tempfile
@@ -6,6 +7,8 @@ from datetime import datetime as dt
 
 import numpy as np
 import pandas as pd
+
+from toolbox_runner.step import Step
 
 
 class Tool:
@@ -23,7 +26,7 @@ class Tool:
         # build conf
         self._build_config(**kwargs)
 
-    def run(self, host_path: str = None, result_path: str = None, keep_container: bool = False, **kwargs):
+    def run(self, host_path: str = None, result_path: str = None, keep_container: bool = False, **kwargs) -> Union[str, Step]:
         """
         Run the tool as configured. The tool will create a temporary directory to
         create a parameter specification file and mount it into the container.
@@ -105,7 +108,7 @@ class Tool:
         if result_path is not None:
             fname = os.path.join(result_path, f"{int(dt.now().timestamp())}_{self.name}")
             shutil.make_archive(fname, 'gztar', host_path)
-            return f"{fname}.tar.gz"
+            return Step(path=f"{fname}.tar.gz")
         else:
             return stdout
 
@@ -132,7 +135,9 @@ class Tool:
                 if self.parameters[key]['type'] == 'file':
                     # save the params
                     fname = f"{key}.csv"
-                    value.to_csv(os.path.join(path, fname))
+                    if value.index.name is not None:
+                        value.reset_index(inplace=True)
+                    value.to_csv(os.path.join(path, fname), index=None)
                     value = f"/in/{fname}"
                 else:
                     value = value.values.tolist()
