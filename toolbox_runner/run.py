@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union, Dict
 import os
 from toolbox_runner.image import Image
 from toolbox_runner.tool import Tool
@@ -13,7 +13,7 @@ except Exception:
     DOCKER = 'na'
 
 # on startup try to find 
-def list_tools(prefix='tbr_') -> List[Tool]:
+def list_tools(prefix='tbr_', as_dict: bool = False) -> Union[List[Tool], Dict[str, Tool]]:
     """List all available tools on this docker instance"""
     stream = os.popen("docker image list")
     raw = stream.read()
@@ -31,4 +31,8 @@ def list_tools(prefix='tbr_') -> List[Tool]:
             image_tools = image.load_tools()
             tools.extend(image_tools)
     
-    return tools
+    # return type
+    if as_dict:
+        return {t.name: t for t in tools}
+    else:
+        return tools
