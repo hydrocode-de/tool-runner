@@ -4,6 +4,8 @@
         "foo_float": 13.37,
         "foo_string": "Never eat yellow snow",
         "foo_enum": "bar",
-        "foo_array": [34, 55, 23, 43, 23]
+        "foo_array": [34, 55, 23, 43, 23],
+        "foo_matrix": "/in/random_matrix.csv",
+        "foo_dataframe": "/in/random_df.csv"
     }
 }
