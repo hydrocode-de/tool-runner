@@ -3,6 +3,7 @@ import os
 import json
 import tempfile
 import shutil
+import subprocess
 from datetime import datetime as dt
 
 import numpy as np
@@ -12,9 +13,10 @@ from toolbox_runner.step import Step
 
 
 class Tool:
-    def __init__(self, name: str, repository: str, tag: str, **kwargs):
+    def __init__(self, name: str, repository: str, tag: str, image: str = None, **kwargs):
         self.name = name
         self.repository = repository
+        self.image = image
         self.tag = tag
         self.valid = False
         
@@ -25,6 +27,15 @@ class Tool:
 
         # build conf
         self._build_config(**kwargs)
+
+    @property
+    def metadata(self):
+        return {
+            'name': self.name,
+            'repository': self.repository,
+            'image': self.image,
+            'tag': self.tag
+        }
 
     def run(self, host_path: str = None, result_path: str = None, keep_container: bool = False, **kwargs) -> Union[str, Step]:
         """
@@ -94,15 +105,23 @@ class Tool:
             rm_set = f"--cidfile {os.path.join(host_path, '.containerid')}"
         else:
             rm_set = "--rm"
-        
+                
         # run
         cmd = f"docker run {rm_set} -v {in_dir}:/in -v {out_dir}:/out --env TOOL_RUN={self.name} --env PARAM_FILE=/in/tool.json {self.repository}:{self.tag}"
-        stream = os.popen(cmd)
-
-        # save the stdout
-        stdout = stream.read()
+        
+        # call the container but capture Stdout and Stderr
+        proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        
+        # save the stdout and stderr
         with open(os.path.join(out_dir, 'STDOUT.log'), 'w') as f:
-            f.write(stdout)
+            f.write(proc.stdout)
+        
+        with open(os.path.join(out_dir, 'STDERR.log'), 'w') as f:
+            f.write(proc.stderr)
+
+        # write the metadata about the container and image
+        with open(os.path.join(host_path, 'metadata.json'), 'w') as f:
+            json.dump(self.metadata, f, indent=4)
         
         # should the results be copied?
         if result_path is not None:
@@ -110,7 +129,7 @@ class Tool:
             shutil.make_archive(fname, 'gztar', host_path)
             return Step(path=f"{fname}.tar.gz")
         else:
-            return stdout
+            return proc.stdout
 
 
     def _build_parameter_file(self, path: str, **kwargs) -> str:
