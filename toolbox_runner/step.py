@@ -1,16 +1,21 @@
 from typing import List
+import os
 import tarfile
 
 class Step:
     def __init__(self, path: str):
         # set path
         self.path = path
+        self.fname = os.path.basename(self.path)
 
         # some object attributes
         self._members = []
         self._inputs = []
         self._outputs = []
         self._metadata = []
+
+        # inspect the tarball
+        self._load_members()
 
     def _load_members(self):
         with tarfile.open(self.path, mode='r:*') as tar:
