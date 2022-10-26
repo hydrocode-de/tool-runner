@@ -1,5 +1,6 @@
 library(jsonlite)
 library(yaml)
+library(tools)
 
 get_parameters <- function() {
     # get the parameter file env variable
@@ -34,7 +35,7 @@ get_parameters <- function() {
         t <- params_config[[name]][["type"]]
         # get the value
         val <- params[[name]]
-
+        
         # handle specific types
         if (t == "enum") {
             if (!(val %in% params_config[[name]]$values)) {
@@ -52,7 +53,7 @@ get_parameters <- function() {
            parsed_params <- c(parsed_params, l)
         } else if (t == "file") {
             # get the ext and use the corresponding reader
-            ext = tolower(xfun::file_ext())
+            ext = tolower(file_ext(val))
             if (ext == "mat") {
 ### extra package benötigt um .mat zu öffnen..
                 val <- read.table(val)

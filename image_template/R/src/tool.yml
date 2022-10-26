@@ -19,3 +19,7 @@ tools:
       foo_array:
         type: float
         array: true 
+      foo_matrix:
+        type: file
+      foo_dataframe:
+        type: file
