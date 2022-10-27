@@ -46,13 +46,24 @@ class Step:
         return '.containerid' in self._metadata
 
     @property
-    def log(self):
+    def log(self) -> str:
         """
         TODO: here, we might want to change the structure of the TAR
         """
         log = self.get_file('./out/STDOUT.log').decode()
         return log
-    
+
+    @property
+    def errors(self) -> str:
+        """
+        Return the content of the errorlogs
+        """
+        log = self.get_file('./out/STDERR.log').decode()
+        return log
+
+    @property
+    def has_errors(self) -> bool:
+        return self.errors == ""
 
     def get_file(self, path: str) -> bytes:
         """
