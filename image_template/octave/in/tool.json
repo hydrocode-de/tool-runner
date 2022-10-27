@@ -1,0 +1,9 @@
+{
+    "foobar": {
+        "foo_int": 42,
+        "foo_float": 13.37,
+        "foo_string": "Never eat yellow snow",
+        "foo_enum": "bar",
+        "foo_array": [34, 55, 23, 43, 23]
+    }
+}
