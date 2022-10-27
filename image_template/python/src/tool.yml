@@ -19,3 +19,7 @@ tools:
       foo_array:
         type: integer
         array: true
+      foo_matrix:
+        type: file
+      foo_csv:
+        type: file
