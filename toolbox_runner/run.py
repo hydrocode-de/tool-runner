@@ -23,9 +23,9 @@ def require_backend(on_fail='error'):
         return True
     else:
         if on_fail == 'error':
-            raise RuntimeError("Docker engine is not available....")
+            raise RuntimeError("Docker engine is not available.")
         else:
-            print("Docker engine is not available.?")
+            print("Docker engine is not available.")
 
 
 def list_tools(prefix='tbr_', as_dict: bool = False) -> Union[List[Tool], Dict[str, Tool]]:
