@@ -35,46 +35,26 @@ get_parameters <- function() {
         t <- params_config[[name]][["type"]]
         # get the value
         val <- params[[name]]
-        
-        # handle specific types
+
+        # handle value specific types
         if (t == "enum") {
             if (!(val %in% params_config[[name]]$values)) {
                 stop(paste("The value '", val, "' is not contained in [", paste(params_config[[name]]$values, collapse = " "), "]", sep = ""))
             }
-            # save val to labeled list and append to parsed_params
-            l <- list(val)
-            names(l) <- name
-            parsed_params <- c(parsed_params, l)
         } else if (t %in% c("datetime", "date", "time")) {
-           val <- as.POSIXct(val)
-           # save val to labeled list and append to parsed_params
-           l <- list(val)
-           names(l) <- name
-           parsed_params <- c(parsed_params, l)
+            val <- as.POSIXct(val)
         } else if (t == "file") {
             # get the ext and use the corresponding reader
-            ext = tolower(file_ext(val))
+            ext <- tolower(file_ext(val))
             if (ext == "mat") {
                 # matrix files: no header, no index
-                val <- read.csv(val, header = FALSE)
+                val <- as.matrix(read.table(val))
             } else if (ext == "csv") {
                 val <- read.csv(val)
             }
-            # save val to labeled list and append to parsed_params
-            l <- list(val)
-            names(l) <- name
-            parsed_params <- c(parsed_params, l)
-        } else {
-            # save val to labeled list and append to parsed_params
-            l <- list(val)
-            names(l) <- name
-            parsed_params <- c(parsed_params, l)
         }
+        # append value to parsed_params
+        parsed_params[[name]] <- val
     }
-
     return(parsed_params)
-}
-
-# named list unpacken: do.call(...)!!
-
-# .csv, .mat mit numpy und pandas in /in -> einlesen testen
+    }

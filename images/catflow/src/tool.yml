@@ -41,6 +41,3 @@ tools:
           - 2
           - 3
         description: type of geometry; (1) constant thickness (default), (2) cake-shape, (3) variable thickness with spline approximation of lower boundary
-      file.name:
-        type: string
-        description: name for CATFLOW geofile to produce

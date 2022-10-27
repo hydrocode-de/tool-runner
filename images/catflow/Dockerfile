@@ -14,11 +14,14 @@ RUN mkdir /out
 RUN mkdir /src
 COPY ./src /src
 
-# COPY CATFLOW-R-Package source code
-COPY ./src/Catflow-R-Package ./src/Catflow-R-Package
+# download latest version of Catflow-R-Package from github, untar and rename
+RUN wget -qO- https://github.com/CATFLOW/Catflow-R-Package/archive/refs/heads/main.tar.gz | tar xz -C src/ && mv /src/Catflow-R-Package-main /src/Catflow-R-Package
 
 # install Catflow-R-Package from source
-RUN R -e "install.packages('/src/Catflow-R-Package', repos = NULL, type = 'source')"
+RUN R -e "install.packages('/src/Catflow-R-Package/Catflow', repos = NULL, type = 'source')"
+
+# delete Catflow-R-Pacakge source code
+RUN rm -rf /src/Catflow-R-Package
 
 WORKDIR /src
 CMD ["Rscript", "run.R"]

@@ -16,14 +16,13 @@ if (toolname == "") {
 
 # Switch for the different tools available in this package
 if (toolname == "make_geometry") {
-    # # add filename to save generated geometry
-    # l <- list("geometry.geo")
-    # names(l) <- out.file
-    # params <- c(params, l)
+    # add filename to save generated geometry
+    params$out.file <- "/out/geometry.geo"
 
     # run function make.geometry() with params as input parameters
-    make.geometry(params, project.path = "/out")
-## /out is empty!
+    pdf('/out/geometry.pdf')
+    output <- make.geometry(params, plottitle = "Model Geometry") # width, height, resolution
+    dev.off()
 } else {
     # in any other case, the tool was invalid or not configured
     f <- file("/out/error.log")
