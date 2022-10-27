@@ -1,0 +1,46 @@
+tools:
+  make_geometry:
+    title: CATFLOW model geometry
+    description: Generates a set of curvilinear orthogonal coordinates and writes the corresponding geometry file for use with the hydrological model CATFLOW.
+    version: 0.1
+    parameters:
+      xh: 
+        type: float
+        array: true
+        description: x-coordinate of slope line (northing) [m]
+      yh:
+        type: float
+        array: true
+        description: y-coordinate of slope line (easting) [m]
+      zh:
+        type: float
+        array: true
+        description: z-coordinate of slope line (surface elevation) [m]
+      bh:
+        type: float
+        array: true
+        description: slope width [m]
+      tot.area:
+        type: float
+        description: total area of slope [m2]
+      dyy:
+        type: float
+        description: thickness of profile [m]
+      xsi:
+        type: float
+        array: true
+        description: relative discretization in lateral direction
+      eta:
+        type: float
+        array: true
+        description: relative discretization in vertical direction
+      htyp:
+        type: enum
+        values:
+          - 1
+          - 2
+          - 3
+        description: type of geometry; (1) constant thickness (default), (2) cake-shape, (3) variable thickness with spline approximation of lower boundary
+      file.name:
+        type: string
+        description: name for CATFLOW geofile to produce
