@@ -11,12 +11,27 @@ try:
     if DOCKER == '':
         raise Exception
 except Exception:
-    print('Docker engine is not available')
     DOCKER = 'na'
+
+
+def docker_available() -> bool:
+    return DOCKER != 'na'
+
+
+def require_backend(on_fail='error'):
+    if docker_available():
+        return True
+    else:
+        if on_fail == 'error':
+            raise RuntimeError("Docker engine is not available....")
+        else:
+            print("Docker engine is not available.?")
 
 
 def list_tools(prefix='tbr_', as_dict: bool = False) -> Union[List[Tool], Dict[str, Tool]]:
     """List all available tools on this docker instance"""
+    require_backend()
+    
     stream = os.popen("docker image list")
     raw = stream.read()
     lines = raw.splitlines()
@@ -58,6 +73,8 @@ def load_steps(path: str) -> Union[Step, List[Step]]:
     step : List[Step], Step
         The Step represenstation of the path or directory.
     """
+    require_backend(on_fail='info')
+
     if path.endswith('.tar.gz'):
         return Step(path)
     elif os.path.isdir(path):
