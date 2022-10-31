@@ -143,7 +143,7 @@ class Tool:
                 # check if this parameter requires only a string
                 if self.parameters[key]['type'] == 'file':
                     # save the params
-                    fname = f"{key}.dat"
+                    fname = f"{key}.mat"
                     np.savetxt(os.path.join(path, fname), value)
                     value = f"/in/{fname}"
                 else:
