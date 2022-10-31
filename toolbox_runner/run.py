@@ -8,7 +8,7 @@ from toolbox_runner.step import Step
 try:
     stream = os.popen("docker version --format '{{.Server.Version}}'")
     DOCKER = stream.read()
-    if DOCKER == '':
+    if DOCKER == '\n':
         raise Exception
 except Exception:
     DOCKER = 'na'
