@@ -30,6 +30,7 @@ def _parse_param(key: str, val: str, param_config: dict):
     c = param_config[key]
 
     # handle arrays
+    # TODO: add an optional shape parameter. if set -> np.flatten().reshape(shape)
     if isinstance(val, (list, tuple)):
         return [_parse_param(key, _, param_config) for _ in val]
     

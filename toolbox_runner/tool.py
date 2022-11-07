@@ -142,6 +142,7 @@ class Tool:
             if isinstance(value, np.ndarray):
                 # check if this parameter requires only a string
                 if self.parameters[key]['type'] == 'file':
+                    # TODO: This only works for 1D,2D numpy arrays -> else use a netcdf?
                     # save the params
                     fname = f"{key}.mat"
                     np.savetxt(os.path.join(path, fname), value)
@@ -173,7 +174,7 @@ class Tool:
             # Copy any file source
             elif isinstance(value, str):
                 if self.parameters[key]['type'] == 'file':
-                    fname = f"{key}.{os.path.splitext(value)[1]}"
+                    fname = f"{key}{os.path.splitext(value)[1]}"
                     shutil.copy(value, os.path.join(path, fname))
                     value = f"/in/{fname}"
 
