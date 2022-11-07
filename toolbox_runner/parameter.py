@@ -51,7 +51,7 @@ def _parse_param(key: str, val: str, param_config: dict):
         _, ext = os.path.splitext(val)
         
         # use numpy for matrix files
-        if ext.lower() == '.mat':
+        if ext.lower() == '.dat':
             val = np.loadtxt(val)
         elif ext.lower() == '.csv':
             val = pd.read_csv(val)

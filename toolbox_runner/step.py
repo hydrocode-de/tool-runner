@@ -102,7 +102,7 @@ class Step:
         """
         Return file content as a Python structure. Currently supported are:
         
-        * .mat  -> numpy.array
+        * .dat  -> 1d/2d numpy.array
         * .csv  -> pandas.DataFrame
         * .json -> dict
 
