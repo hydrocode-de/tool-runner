@@ -46,7 +46,7 @@ get_parameters <- function() {
         } else if (t == "file") {
             # get the ext and use the corresponding reader
             ext <- tolower(file_ext(val))
-            if (ext == "mat") {
+            if (ext == "dat") {
                 # matrix files: no header, no index
                 val <- as.matrix(read.table(val))
             } else if (ext == "csv") {
