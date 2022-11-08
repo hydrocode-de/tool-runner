@@ -6,6 +6,7 @@ import shutil
 import subprocess
 from datetime import datetime as dt
 from concurrent.futures import ThreadPoolExecutor, Future
+from blinker import Signal
 
 import numpy as np
 import pandas as pd
@@ -14,11 +15,52 @@ from toolbox_runner.step import Step
 
 
 class Tool:
+    """
+    Tool execution using toolbox-runner.
+    This class represents a tool inside a docker container and can be used to execute the tool
+    and create :class:`Step <toolbox_runner.step.Step>` representations.
+
+    The Tool can be run asynchronously. For this, the class has a class attribute called 
+    EXECUTOR, which can be any class inheriting from :class:`Executor <concurrent.futures..Executor>`.
+    By default, a :class:`ThreadPoolExecutor(max_workers=10) <concurrent.futures..ThreadPoolExecutor>`
+    is used, but you can change it at runtime:
+
+    >> from concurrent.futures import ProcessPoolExecutor
+    >> Tool.EXECUTOR = ProcessPollExecutor(max_workers=4)
+
+    Make sure, that the arguments passed to the :func:`Tool.run <toolbox_runner.tool.Tool.run>` function
+    can be passed to a child process.
+
+    Additionally, the Tool class implements ``blinker`` signals. A default signal is called whenever 
+    a :class:`Future <concurrent.futures.Future>` is done. Any subscriber to that signal has to accept
+    resulting the :class:`Step <toolbox_runner.step.Step>` or string of Stdout, if no ``result_path`` was passed to run.
+    By default there are four signals: 
+
+    * TOOL.INIT 
+    * TOOL.FINISHED
+    * TOOL.CANCELLED
+    * TOOL.ERRORED
+
+    The subscribed function will receive the object that emitted the signal. To easier manage chains of tool calls,
+    you can overwirte the the Tool.IDENTIFIER, which will default to the **instance** attribute Tool().name. As
+    the singals are implemented as class attributes, you can then use one subscriber to handle a signal of all
+    tools (like the ERRORED to cancel a workflow). 
+    The second appoach is to overwirte the signal on instance level. Then, the signal will only be called by this 
+    specific tool. 
+
+    """
     # define a Executor
-    executor = ThreadPoolExecutor(max_workers=10)
+    EXECUTOR = ThreadPoolExecutor(max_workers=10)
+    
+    # define blinker signals
+    INIT = Signal()
+    FINISHED = Signal()
+    CANCELLED = Signal()
+    ERRORED = Signal()
     
     def __init__(self, name: str, repository: str, tag: str, image: str = None, **kwargs):
         self.name = name
+        self.IDENTIFIER = self.name
         self.repository = repository
         self.image = image
         self.tag = tag
@@ -41,12 +83,38 @@ class Tool:
             'tag': self.tag
         }
 
-    def __async_wrapper(self, **kwargs) -> Union[Future[Step], Future[str]]:
+    def _async_wrapper(self, **kwargs) -> Union[Future[Step], Future[str]]:
+        """
+        The async wrapper submits the run function will all given parameters to the 
+        executor initialized in the Tool class.
+
+        The futures can be combined with blinker by adding a callback that will 
+        send the specified signal name to indicate the finished execution to 
+        a workflow tool.
+
+        """
         # always set the run_async flag to False to prevent concurrent infite loops
         kwargs['run_async'] = False
-        
+
+        # define the signal callback function
+        def tool_callback(future: Union[Future[Step], Future[str]]):
+            # the tool is done, so check if it has been canceled or errored
+            if future.cancelled():
+                self.CANCELLED.send(self.IDENTIFIER)
+            
+            # get exections
+            exception = future.exception()
+            if exception is not None:
+                self.ERRORED.send(self.IDENTIFIER, exception)
+
+            # emit the result to all subscribers
+            self.FINISHED.send(self.IDENTIFIER, future.result())
+
         # add the run function to the executor
-        future = Tool.executor.submit(self.run, **kwargs)
+        future = Tool.EXECUTOR.submit(self.run, **kwargs)
+
+        # append the callback
+        future.add_done_callback(tool_callback)
 
         # return
         return future
@@ -106,7 +174,7 @@ class Tool:
         
         # run asynchronously
         if run_async:
-            return self.__async_wrapper(host_path=host_path, result_path=result_path, keep_container=keep_container, **kwargs)
+            return self._async_wrapper(host_path=host_path, result_path=result_path, keep_container=keep_container, **kwargs)
         
         # create a temporary directory if needed
         if host_path is None:
