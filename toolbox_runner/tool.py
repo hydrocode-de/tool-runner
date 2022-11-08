@@ -5,6 +5,7 @@ import tempfile
 import shutil
 import subprocess
 from datetime import datetime as dt
+from concurrent.futures import ThreadPoolExecutor, Future
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,9 @@ from toolbox_runner.step import Step
 
 
 class Tool:
+    # define a Executor
+    executor = ThreadPoolExecutor(max_workers=10)
+    
     def __init__(self, name: str, repository: str, tag: str, image: str = None, **kwargs):
         self.name = name
         self.repository = repository
@@ -37,7 +41,17 @@ class Tool:
             'tag': self.tag
         }
 
-    def run(self, host_path: str = None, result_path: str = None, keep_container: bool = False, **kwargs) -> Union[str, Step]:
+    def __async_wrapper(self, **kwargs) -> Union[Future[Step], Future[str]]:
+        # always set the run_async flag to False to prevent concurrent infite loops
+        kwargs['run_async'] = False
+        
+        # add the run function to the executor
+        future = Tool.executor.submit(self.run, **kwargs)
+
+        # return
+        return future
+
+    def run(self, host_path: str = None, result_path: str = None, keep_container: bool = False, run_async: bool = False, **kwargs) -> Union[str, Step, Future]:
         """
         Run the tool as configured. The tool will create a temporary directory to
         create a parameter specification file and mount it into the container.
@@ -67,6 +81,11 @@ class Tool:
             execution. The resulting Step class can be used to package and archive
             the step result along with the container and image as a 100% reproducible
             tool run. Defaults to False.
+        run_async : bool
+            If set to True, the tool will be run asynchronously in a new Thread using
+            Pythons `concurrent.futures` API. The function will immediately return a
+            :class:`Future <concurrent.futures.Future>` object which will resolve to
+            either a :class:`Step <toolbox_runner.step.Step>` instance or a string.
         kwargs : dict, optional
             All possible parameters for the tool. These will be mounted into the
             tool container and toolbox_runner will parse the file inside the
@@ -77,9 +96,17 @@ class Tool:
         output : str
             If a result path was given, output contains the filename of the created
             archive. Otherwise the captured stdout of the container will returned.
+            If run asynchronously, a :class:`Future <concurrent.futures.Future>` of
+            that will be returned immediately.
+
         """
+        # check validity
         if not self.valid:
             raise RuntimeError('This tool has no valid configuration.')
+        
+        # run asynchronously
+        if run_async:
+            return self.__async_wrapper(host_path=host_path, result_path=result_path, keep_container=keep_container, **kwargs)
         
         # create a temporary directory if needed
         if host_path is None:
