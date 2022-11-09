@@ -64,6 +64,7 @@ def _parse_param(key: str, val: str, param_config: dict):
 
 
 def parse_parameter() -> dict:
+    print("YOU ARE USING AN OLD VERSION OF parse_parameter. PLEASE USE get_parameter FROM the json2args package.")
     # load the parameter file
     with open(get_env()['param_file']) as f:
         p = json.load(f)
