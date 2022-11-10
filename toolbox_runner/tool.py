@@ -150,7 +150,7 @@ class Tool:
                         np.savetxt(os.path.join(path, fname), value)
                         value = f"/in/{fname}"
                     else:
-                        raise NotImplementedError("Matrices with dimensionality > 2 will be saved to netCDF files in the future.")
+                        raise NotImplementedError("Matrices with dimensionality > 2 will be saved to (custom) text files or netCDF files in the future.")
                 else:
                     value = value.tolist()
             
