@@ -239,9 +239,13 @@ class Tool:
                 if self.parameters[key]['type'] == 'file':
                     # TODO: This only works for 1D,2D numpy arrays -> else use a netcdf?
                     # save the params
-                    fname = f"{key}.mat"
-                    np.savetxt(os.path.join(path, fname), value)
-                    value = f"/in/{fname}"
+                    # save 1d and 2d arrays to .dat file
+                    if value.ndim <= 2:
+                        fname = f"{key}.dat"
+                        np.savetxt(os.path.join(path, fname), value)
+                        value = f"/in/{fname}"
+                    else:
+                        raise NotImplementedError("Matrices with dimensionality > 2 will be saved to (custom) text files or netCDF files in the future.")
                 else:
                     value = value.tolist()
             
