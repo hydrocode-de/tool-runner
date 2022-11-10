@@ -100,15 +100,15 @@ class Tool:
         def tool_callback(future: Union[Future[Step], Future[str]]):
             # the tool is done, so check if it has been canceled or errored
             if future.cancelled():
-                self.CANCELLED.send(self.IDENTIFIER)
+                self.CANCELLED.send({self.IDENTIFIER: 'cancelled'})
             
             # get exections
             exception = future.exception()
             if exception is not None:
-                self.ERRORED.send(self.IDENTIFIER, exception)
+                self.ERRORED.send({self.IDENTIFIER: exception})
 
             # emit the result to all subscribers
-            self.FINISHED.send(self.IDENTIFIER, future.result())
+            self.FINISHED.send({self.IDENTIFIER: future.result()})
 
         # add the run function to the executor
         future = Tool.EXECUTOR.submit(self.run, **kwargs)
