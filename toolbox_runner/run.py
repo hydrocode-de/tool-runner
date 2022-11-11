@@ -1,6 +1,9 @@
 from typing import List, Union, Dict
 import os
 import glob
+
+from github import Github
+
 from toolbox_runner.image import Image
 from toolbox_runner.tool import Tool
 from toolbox_runner.step import Step
@@ -24,11 +27,13 @@ def require_backend(on_fail='error'):
     else:
         if on_fail == 'error':
             raise RuntimeError("Docker engine is not available.")
-        else:
+        elif on_fail == 'info':
             print("Docker engine is not available.")
+        else:
+            pass
 
 
-def list_tools(prefix='tbr_', as_dict: bool = False) -> Union[List[Tool], Dict[str, Tool]]:
+def list_tools(prefix: Union[str, List[str]] = 'tbr_', as_dict: bool = False) -> Union[List[Tool], Dict[str, Tool]]:
     """List all available tools on this docker instance"""
     require_backend()
     
@@ -39,11 +44,15 @@ def list_tools(prefix='tbr_', as_dict: bool = False) -> Union[List[Tool], Dict[s
     # get the header
     header = [_.lower() for _ in lines[0].split()]
 
+    # check the prefix data type
+    if isinstance(prefix, str):
+        prefix = [prefix]
+
     tools = []
     for line in lines[1:]:
         conf = {h: v for h, v in zip(header, line.split()) if h in ('repository', 'tag', 'image')}
 
-        if conf['repository'].startswith(prefix):
+        if any([conf['repository'].startswith(pref) for pref in prefix]):
             image = Image(**conf)
             image_tools = image.load_tools()
             tools.extend(image_tools)
@@ -82,3 +91,24 @@ def load_steps(path: str) -> Union[Step, List[Step]]:
         return [Step(fname) for fname in files]
     else:
         raise AttributeError('Path needs to be a directory containing Step tarballs or a path to a single file.')
+
+
+def get_remote_image_list(repo='hydrocode-de/tool-runner', list_file='tool-list.txt'):
+    """Load all images from remote repository"""
+    # connect without authentication
+    g = Github()
+
+    # spot the file and download
+    tlist: bytes = g.get_repo(repo).get_contents(list_file).decoded_content
+    tool_images = [_.decode() for _ in tlist.splitlines()]
+
+    return tool_images
+
+
+def update_tools():
+    """Load the list of available vfw tools and pull the images"""
+    image_list = get_remote_image_list()
+
+    # pull all images
+    for image in image_list:
+        os.system(f"docker pull {image}")
