@@ -23,6 +23,7 @@ class Workflow:
         self.steps= defaultdict(lambda: None)
         self.tools = dict()
         self.run_options = defaultdict(lambda: dict())
+        self._futures = defaultdict(lambda: dict())
 
         # TODO: make a temporary folder available here
         if work_dir is None:
@@ -56,6 +57,11 @@ class Workflow:
         self.run_options[tname] = kwargs
 
         return tname
+
+    def copy(self, path: str):
+        """
+        """
+        pass
 
     def generate_graph(self):
         """
@@ -165,7 +171,9 @@ class Workflow:
 
     def clear(self):
         """Clear the internal state of steps and remove the FINISHED subscriber."""
-        self.steps = dict()
+        # clear steps and futures
+        self.steps = defaultdict(lambda: dict())
+        self._futures = defaultdict(lambda: dict())
 
         if Tool.FINISHED.has_receivers_for(self.finish_subscription):
             Tool.FINISHED.disconnect(self.finish_subscription)
@@ -198,7 +206,7 @@ class Workflow:
         identifier = list(data.keys())[0]
         step = data[identifier]
         
-        print(f"{identifier} finished: {str(step)}")
+        print(f"\n{identifier} finished: {str(step)}")
         
         # got a step, add it to the WF
         self.steps[identifier] = step
@@ -282,8 +290,9 @@ class Workflow:
 
                 # run 
                 print(f"Dispatching '{node}'...")
-                # TODO save the future to track funny things
+                # run the tool and save the future
                 future = tool.run(result_path=work_dir, run_async=True, **kwargs)
+                self._futures[node] = future
             else:
                 print(f"'{node}' is lacking requirements. Waiting for other steps to finish.")
                 continue
