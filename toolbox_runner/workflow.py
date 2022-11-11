@@ -60,11 +60,6 @@ class Workflow:
 
         return tname
 
-    def copy(self, path: str):
-        """
-        """
-        pass
-
     def generate_graph(self):
         """
         To generate a dependency graph, go for each node and check the requirements.
