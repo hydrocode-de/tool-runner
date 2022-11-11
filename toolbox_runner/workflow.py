@@ -7,9 +7,11 @@ Asynchronous and concurrent workflows
 from typing import List, Dict
 import os
 import tempfile
+import shutil
 from collections import defaultdict
 import networkx as nx
 import matplotlib.pyplot as plt
+from concurrent.futures import Future
 
 from toolbox_runner.tool import Tool
 from toolbox_runner.step import Step
@@ -23,7 +25,7 @@ class Workflow:
         self.steps= defaultdict(lambda: None)
         self.tools = dict()
         self.run_options = defaultdict(lambda: dict())
-        self._futures = defaultdict(lambda: dict())
+        self._futures: Dict[str, Future] = defaultdict(lambda: None)
 
         # TODO: make a temporary folder available here
         if work_dir is None:
@@ -135,8 +137,10 @@ class Workflow:
         * pending: The tool is waiting for execution
         * running: The tool is currently running
         * finished: The tool has submitted results to the Workflow
+        * cancelled: The tool was cancelled by the user
+        * errored: The tool errored
+        * undefined: The Future of the tool was created, but it is not running and not finished
 
-        Right now, the state 'canceled' and 'errored' are not tracked
 
         """
         state = dict(
@@ -146,7 +150,13 @@ class Workflow:
         nodes =list([n for n in self.G.nodes if n != 'root'])
         
         for n in nodes:
-            if n in self.steps:
+            # if step is there, the node finished
+            if n in self.steps and n not in self._futures:
+                # this checks if the step was already there to prevent the tool 
+                # from running again. in this case, no Future was created, but 
+                # the tool can still be considered finished.
+                # If the future is present, it could also contain an error, then
+                # we check the future state, not the Step.
                 state[n] = 'finished'
                 continue
                 
@@ -157,23 +167,47 @@ class Workflow:
             if len(suc) == 0 and len(pre) == 0:
                 state[n] = 'invalid'
                 continue
-
-            # check the predecessors
-            if all([p in self.steps for p in pre]):
-                state[n] = 'running'
-                continue
-
-            # in any other case the tool is pending
-            # Either because predecessors are currently running or because the whole graph is pending
-            state[n] = 'pending'
+            
+            # check if there is an future for this Node
+            if n in self._futures:
+                # use the future to determine the state
+                if self._futures[n].running():
+                    state[n] = 'running'
+                elif self._futures[n].cancelled():
+                    state[n] = 'cancelled'
+                elif self._futures[n].exception() is not None:
+                    state[n] = 'errored'
+                elif self._futures[n].done():
+                    state[n] = 'finished'
+                else:
+                    state[n] = 'undefined'
+            else:
+                # did not start so far
+                state[n] = 'pending'
 
         return state
+
+    @property
+    def running(self):
+        return any([f.running() for f in self._futures.values()])
+    
+    @property
+    def errored(self):
+        return any([f.exception() is not None for f in self._futures.values()])
+    
+    @property
+    def cancelled(self):
+        return any([f.cancelled() for f in self._futures.values()])
+
+    @property
+    def done(self):
+        return all([n in self.steps for n in self.G.nodes]) and len(self.steps) > 0
 
     def clear(self):
         """Clear the internal state of steps and remove the FINISHED subscriber."""
         # clear steps and futures
-        self.steps = defaultdict(lambda: dict())
-        self._futures = defaultdict(lambda: dict())
+        self.steps = defaultdict(lambda: None)
+        self._futures = defaultdict(lambda: None)
 
         if Tool.FINISHED.has_receivers_for(self.finish_subscription):
             Tool.FINISHED.disconnect(self.finish_subscription)
@@ -210,6 +244,11 @@ class Workflow:
         
         # got a step, add it to the WF
         self.steps[identifier] = step
+
+        # check if the workflow errored or was canceled in the meantime
+        if self.cancelled or self.errored:
+            print(f"Stopping dispatcher for Workflow.\nCancelled: {self.cancelled}\tErrored: {self.errored}")
+            return
 
         # now dispatch all successors of this step -> this only happens in mode == 'auto'
         if self.mode.lower() == 'auto':
@@ -303,7 +342,7 @@ class Workflow:
         nodes = list(self.G.nodes)
         
         # hardcode colormapping
-        cm = dict(invalid='#FD7E89', pending='#64A3F5', running='#7862D1', finished='#9CE08B')
+        cm = dict(invalid='#f07579', pending='#8aa4ab', running='#416270', finished='#747c24', errored='#ce3536', cancelled='#f3c58f', undefined='#e3ded9')
         # align colors to inidcate the node state
         state = self.state
         node_colors = [cm[state[n]] for n in nodes]
@@ -319,5 +358,10 @@ class Workflow:
 
         # there you go
         return fig
-
-        
+    
+    def __del__(self):
+        if self._temp_dir is not None:
+            try:
+                self._temp_dir.cleanup()
+            except Exception:
+                pass
