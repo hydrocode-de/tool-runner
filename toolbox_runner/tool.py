@@ -4,6 +4,7 @@ import json
 import tempfile
 import shutil
 import subprocess
+from time import time
 from datetime import datetime as dt
 from concurrent.futures import ThreadPoolExecutor, Future
 from blinker import Signal
@@ -200,13 +201,18 @@ class Tool:
             rm_set = f"--cidfile {os.path.join(host_path, '.containerid')}"
         else:
             rm_set = "--rm"
-                
+
+        # get the time
+        t1 = time()   
         # run
         cmd = f"docker run {rm_set} -v {in_dir}:/in -v {out_dir}:/out --env TOOL_RUN={self.name} --env PARAM_FILE=/in/tool.json {self.repository}:{self.tag}"
         
         # call the container but capture Stdout and Stderr
         proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        
+
+        # end time profiling
+        t2 = time()
+
         # save the stdout and stderr
         with open(os.path.join(out_dir, 'STDOUT.log'), 'w') as f:
             f.write(proc.stdout)
@@ -216,7 +222,7 @@ class Tool:
 
         # write the metadata about the container and image
         with open(os.path.join(host_path, 'metadata.json'), 'w') as f:
-            json.dump(self.metadata, f, indent=4)
+            json.dump({**self.metadata, 'runtime': t2 - t1}, f, indent=4)
         
         # should the results be copied?
         if result_path is not None:
