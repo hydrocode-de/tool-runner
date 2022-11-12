@@ -8,24 +8,7 @@ from yaml import load, Loader
 
 from toolbox_runner.tool import Tool
 from toolbox_runner.step import Step
-
-
-try:
-    # check available
-    stream = os.popen("docker version --format '{{.Server.Version}}'")
-    DOCKER = stream.read()
-    if DOCKER in ['', '\n']:
-        raise Exception
-    
-    # open client
-    client = docker.from_env()
-except Exception:
-    DOCKER = 'na'
-
-
-def docker_available() -> bool:
-    return DOCKER != 'na'
-
+from toolbox_runner._docker import docker_available, client
 
 def require_backend(on_fail='error'):
     if docker_available():
