@@ -3,16 +3,21 @@ import os
 import glob
 
 from github import Github
+import docker 
 
 from toolbox_runner.image import Image
 from toolbox_runner.tool import Tool
 from toolbox_runner.step import Step
 
 try:
+    # check available
     stream = os.popen("docker version --format '{{.Server.Version}}'")
     DOCKER = stream.read()
     if DOCKER in ['', '\n']:
         raise Exception
+    
+    # open client
+    client = docker.from_env()
 except Exception:
     DOCKER = 'na'
 
