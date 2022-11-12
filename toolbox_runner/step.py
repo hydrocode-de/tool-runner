@@ -175,7 +175,7 @@ class Step:
             return f"./out/{name}"
         elif name in self.inputs:
             return f"./in/{name}"
-        elif name in self.metadata:
+        elif name in self._metadata:
             return f"./{name}"
         else:
             raise FileNotFoundError("The file '{name}' is not contained in this tarball.")
