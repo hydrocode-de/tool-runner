@@ -55,7 +55,7 @@ def list_tools(prefix: Union[str, List[str]] = 'tbr_', as_dict: bool = False) ->
         # check if this is a Tool image
         if any([repo.startswith(pref) for pref in prefix]):
             # run a container to load the yaml
-            raw = client.containers.run(f"{repo}:{tag}", command='cat /src/tool.yml')
+            raw = client.containers.run(f"{repo}:{tag}", command='cat /src/tool.yml', remove=True)
             conf = load(raw, Loader=Loader)
 
             # load the tools
