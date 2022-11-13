@@ -3,23 +3,12 @@ import os
 import glob
 
 from github import Github
+import docker 
+from yaml import load, Loader
 
-from toolbox_runner.image import Image
 from toolbox_runner.tool import Tool
 from toolbox_runner.step import Step
-
-try:
-    stream = os.popen("docker version --format '{{.Server.Version}}'")
-    DOCKER = stream.read()
-    if DOCKER in ['', '\n']:
-        raise Exception
-except Exception:
-    DOCKER = 'na'
-
-
-def docker_available() -> bool:
-    return DOCKER != 'na'
-
+from toolbox_runner._docker import docker_available, client
 
 def require_backend(on_fail='error'):
     if docker_available():
@@ -37,25 +26,24 @@ def list_tools(prefix: Union[str, List[str]] = 'tbr_', as_dict: bool = False) ->
     """List all available tools on this docker instance"""
     require_backend()
     
-    stream = os.popen("docker image list")
-    raw = stream.read()
-    lines = raw.splitlines()
+    # load all images
+    images = client.images.list()
 
-    # get the header
-    header = [_.lower() for _ in lines[0].split()]
-
-    # check the prefix data type
-    if isinstance(prefix, str):
-        prefix = [prefix]
-
+    # container for tools
     tools = []
-    for line in lines[1:]:
-        conf = {h: v for h, v in zip(header, line.split()) if h in ('repository', 'tag', 'image')}
+    for image in images:
+        # get the first repo and tag combination
+        repo, tag = image.tags[0].split(':')
+        
+        # check if this is a Tool image
+        if any([repo.startswith(pref) for pref in prefix]):
+            # run a container to load the yaml
+            raw = client.containers.run(f"{repo}:{tag}", command='cat /src/tool.yml', remove=True)
+            conf = load(raw, Loader=Loader)
 
-        if any([conf['repository'].startswith(pref) for pref in prefix]):
-            image = Image(**conf)
-            image_tools = image.load_tools()
-            tools.extend(image_tools)
+            # load the tools
+            for tool_name, tool_conf in conf['tools'].items():
+                tools.append(Tool(tool_name, repo, tag, image.short_id[7:], **tool_conf))
     
     # return type
     if as_dict:

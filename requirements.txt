@@ -4,3 +4,4 @@ pandas
 blinker
 networkx
 PyGithub
+docker

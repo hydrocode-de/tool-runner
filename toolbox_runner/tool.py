@@ -3,16 +3,17 @@ import os
 import json
 import tempfile
 import shutil
-import subprocess
 from time import time
 from datetime import datetime as dt
 from concurrent.futures import ThreadPoolExecutor, Future
-from blinker import Signal
 
+from blinker import Signal
 import numpy as np
 import pandas as pd
+from docker.errors import APIError
 
 from toolbox_runner.step import Step
+from toolbox_runner._docker import client
 
 
 class Tool:
@@ -196,33 +197,59 @@ class Tool:
         # build the parameter file
         self._build_parameter_file(path=in_dir, **kwargs)
 
-        # switch the keep container settings
-        if keep_container:
-            rm_set = f"--cidfile {os.path.join(host_path, '.containerid')}"
-        else:
-            rm_set = "--rm"
-
+        # build the run options for the container
+        run_args = dict(
+            image = f"{self.repository}:{self.tag}",
+            volumes = [f"{out_dir}:/out", f"{in_dir}:/in"],
+            environment=[f"TOOL_RUN={self.name}", f"PARAM_FILE=/in/tool.json"]
+        )
+        
         # get the time
         t1 = time()   
         # run
-        cmd = f"docker run {rm_set} -v {in_dir}:/in -v {out_dir}:/out --env TOOL_RUN={self.name} --env PARAM_FILE=/in/tool.json {self.repository}:{self.tag}"
-        
-        # call the container but capture Stdout and Stderr
-        proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        try:
+            container = client.containers.create(**run_args)
 
-        # end time profiling
-        t2 = time()
+            # do profiling here
+            container.start()   # start 
+            container.wait()    # wait until finished
+
+            # get the container output
+            stdout = container.logs(stdout=True, stderr=False).decode()
+            stderr = container.logs(stdout=False, stderr=True).decode()
+        except APIError as e:
+            stderr += f"\nContainer did not finish without error: {e.explanation}"
+
+        finally:
+            t2 = time()
+
+        # remove the container if needed
+        if not keep_container:
+            try:
+                container.remove()
+            except APIError:
+                # If the error failed before, we can't remove it.
+                pass
 
         # save the stdout and stderr
         with open(os.path.join(out_dir, 'STDOUT.log'), 'w') as f:
-            f.write(proc.stdout)
+            if stdout == '':
+                f.write('No output captured.')
+            f.write(stdout)
         
         with open(os.path.join(out_dir, 'STDERR.log'), 'w') as f:
-            f.write(proc.stderr)
+            f.write(stderr)
+
+        # write metadata
+        metadata = dict(
+            **self.metadata,
+            runtime=t2 - t1,
+            containerid=container.short_id
+        )
 
         # write the metadata about the container and image
         with open(os.path.join(host_path, 'metadata.json'), 'w') as f:
-            json.dump({**self.metadata, 'runtime': t2 - t1}, f, indent=4)
+            json.dump(metadata, f, indent=4)
         
         # should the results be copied?
         if result_path is not None:
@@ -230,7 +257,7 @@ class Tool:
             shutil.make_archive(fname, 'gztar', host_path)
             return Step(path=f"{fname}.tar.gz")
         else:
-            return proc.stdout
+            return stdout
 
 
     def _build_parameter_file(self, path: str, **kwargs) -> str:
