@@ -29,6 +29,10 @@ def list_tools(prefix: Union[str, List[str]] = 'tbr_', as_dict: bool = False) ->
     # load all images
     images = client.images.list()
 
+    # check prefix type
+    if isinstance(prefix, str):
+        prefix = [prefix]
+
     # container for tools
     tools = []
     for image in images:
