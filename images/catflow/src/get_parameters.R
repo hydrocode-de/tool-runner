@@ -6,7 +6,7 @@ get_parameters <- function() {
     # get the parameter file env variable
     PARAM_FILE <- Sys.getenv(x = "PARAM_FILE")
     if (PARAM_FILE == "") {
-        PARAM_FILE <- "/in/tool.json"
+        PARAM_FILE <- "/in/parameters.json"
     }
 
     # get the config file env variable
