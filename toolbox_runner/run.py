@@ -36,6 +36,9 @@ def list_tools(prefix: Union[str, List[str]] = 'tbr_', as_dict: bool = False) ->
     # container for tools
     tools = []
     for image in images:
+        # check if there are tags at first. toolbox-runner can't work without tags
+        if len(image.tags) == 0:
+            continue
         # get the first repo and tag combination
         repo, tag = image.tags[0].split(':')
         
