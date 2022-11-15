@@ -201,7 +201,7 @@ class Tool:
         run_args = dict(
             image = f"{self.repository}:{self.tag}",
             volumes = [f"{out_dir}:/out", f"{in_dir}:/in"],
-            environment=[f"TOOL_RUN={self.name}", f"PARAM_FILE=/in/tool.json"]
+            environment=[f"TOOL_RUN={self.name}", f"PARAM_FILE=/in/parameters.json"]
         )
         
         # get the time
@@ -316,7 +316,7 @@ class Tool:
         # build the json structure
         param_conf = {self.name: params}
 
-        fname = os.path.join(path, 'tool.json')
+        fname = os.path.join(path, 'parameters.json')
         with open(fname, 'w') as f:
             json.dump(param_conf, f)
         

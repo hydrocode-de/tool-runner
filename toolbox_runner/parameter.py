@@ -10,7 +10,7 @@ import pandas as pd
 
 
 CONF_FILE = '/src/tool.yml'
-PARAM_FILE = '/in/tool.json'
+PARAM_FILE = '/in/parameters.json'
 
 def get_env() -> dict:
     return {
