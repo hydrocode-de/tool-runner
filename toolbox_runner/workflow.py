@@ -9,8 +9,10 @@ import os
 import tempfile
 import shutil
 from collections import defaultdict
+
 import networkx as nx
 import matplotlib.pyplot as plt
+from jinja2 import Environment, PackageLoader
 from concurrent.futures import Future
 
 from toolbox_runner.tool import Tool
@@ -26,6 +28,9 @@ class Workflow:
         self.tools = dict()
         self.run_options = defaultdict(lambda: dict())
         self._futures: Dict[str, Future] = defaultdict(lambda: None)
+        
+        # build the jinja2 environment
+        self.jn = Environment(loader=PackageLoader(os.path.join(os.path.dirname(__file__), 'toolbox_runner')), autoescape=False)
 
         # TODO: make a temporary folder available here
         if work_dir is None:
@@ -330,7 +335,29 @@ class Workflow:
             else:
                 print(f"'{node}' is lacking requirements. Waiting for other steps to finish.")
                 continue
+    
+    def _run_metadata_for_node(self, node: str) -> dict:
+        # if there is no step, there is no metadata
+        if node not in self.steps:
+            return {}
 
+        # get the meta
+        meta = self.steps[node].metadata
+
+        if meta is None or meta == '':
+            return {}
+        return meta
+        
+    def _export_force_graph(self):
+        """
+        Return nodes and links to populate a force directed graph
+        """
+        nodes = [{'id': n, 'name': f"<h3>{self.steps[n]}</h3>", 'state': , 'color':} for n in self.G.nodes]
+        links = [{'source': e[0], 'target': e[1], **self._run_metadata_for_node(e[0])} for e in self.G.edges]
+
+        return dict(nodes=nodes, links=links)
+
+    def 
     def _ipython_display_(self):
         """Return as matplotlib graph"""
         # get the nodes

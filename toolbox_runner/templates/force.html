@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <style>
+            body {
+                margin: 0;
+            }
+            #wrapper {
+                height: 100%;
+                width: 100%;
+                display: flex;
+            }
+            #sidebar {
+                height: 100%;
+                width: 20vw;
+            }
+            #graph {
+                width: 80vw;
+            }
+        </style>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://unpkg.com/3d-force-graph"></script>
+        <script src="https://unpkg.com/force-graph"></script>
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="sidebar">
+                <p>Select a property for edge length</p>
+                <div id="props"></div>
+                <p>graph properties</p>
+                <div id="opts"></div>
+            </div>
+            <div id="graph"></div>
+        </div>
+
+        <!-- Data inject -->
+        <script type="text/javascript">
+            let data = {
+                nodes: {{ nodes }},
+                links: {{ edges }}
+            };
+        </script>
+
+        <!-- Script to inject some settings -->
+        <script type="text/javascript">
+            {% if linewidth %}
+            const lw = {{ linewidth }};
+            {% else %}
+            const lw = 4;
+            {% endif %}
+            
+            {% if force %}
+            const defaultForce = '{{ force }}';
+            {% else %}
+            const defaultForce = Object.keys(data.links[0]).find(l => !['source', 'target'].includes(l));
+            {% endif %}
+            const forceOpts = Object.keys(data.links[0]).filter(l => !['source', 'target'].includes(l));
+            
+        </script>
+
+        <!-- run code -->
+        <script type="text/javascript">
+            // build the graph
+            const graph = ForceGraph()(document.getElementById('graph'))
+            .graphData(data)
+            .backgroundColor('rgba(1,1,1,.1)')
+            .linkDirectionalArrowLength(3.5)
+            .linkDirectionalArrowRelPos(1)
+            //.linkCurvature(0.35);
+            .onNodeClick(node => alert(node))
+            ;
+            
+            // change the distance value of the links
+            const setDistance = (name) => {
+                graph.d3Force('link').distance(l => l[name])
+                graph.d3ReheatSimulation()
+            }
+
+            // change the width
+            const setWidth = (w) => {
+                graph.linkWidth(w)
+            }
+            
+            // add the buttons
+            d3.select('#props').selectAll('button').data(forceOpts)
+            .enter().append('button')
+            .text(f => f)
+            .attr('onclick', f => `setDistance('${f}')`)
+            
+            {% if zoom %}
+            graph.onEngineStop(() => graph.zoomToFit(0))
+            {% endif %}
+
+            // render a slider if the linewidth was not passed
+            {% if not linewidth %}
+                d3.select('#opts').selectAll('input').data(['edge-width']).enter()
+                    .append('label').attr('for', l => l).text(l => l)    
+                    .append('input').attr('type', 'range').attr('min', '1').attr('max', '15').attr('value', lw).attr('id', l => l)
+                d3.select('#edge-width').on('input', () => setWidth(parseInt(d3.select('#edge-width').property('value'))))
+            {% endif %}
+            // render the distances
+            setDistance(defaultForce)
+        </script>
+    </body>
+</html>

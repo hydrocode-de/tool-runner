@@ -206,7 +206,7 @@ class Step:
         # Maybe even the tool.yml can provide an import path to 3rd-party Reducers
         if ext.lower() == '.json':
             return json.loads(content.decode())
-        elif ext.lower() == '.mat':
+        elif ext.lower() == '.dat':
             with StringIO(content.decode()) as f:
                 return np.loadtxt(f)
         elif ext.lower() == '.csv':
