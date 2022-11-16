@@ -13,6 +13,7 @@ try:
     client = docker.from_env()
 except Exception:
     DOCKER = 'na'
+    client = None
 
 
 def docker_available() -> bool:
