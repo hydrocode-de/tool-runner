@@ -326,7 +326,7 @@ class Tool:
         """Check the config"""
         self.title = conf['title']
         self.description = conf['description']
-        self.version = conf['version']
+        self.version = conf.get('version')
         self.parameters = conf['parameters']
 
         self.valid = True
