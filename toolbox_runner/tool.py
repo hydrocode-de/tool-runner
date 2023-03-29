@@ -306,9 +306,15 @@ class Tool:
             # Copy any file source
             elif isinstance(value, str):
                 if self.parameters[key]['type'] == 'file':
-                    fname = f"{key}{os.path.splitext(value)[1]}"
-                    shutil.copy(value, os.path.join(path, fname))
-                    value = f"/in/{fname}"
+                    # check if file is actually a folder (no file extension)
+                    if not os.path.splitext(value)[1]:
+                        dirname = os.path.basename(os.path.normpath(value))
+                        shutil.copytree(value, os.path.join(path, dirname), dirs_exist_ok=False)
+                        value = f"/in/{dirname}"
+                    else:
+                        fname = f"{key}{os.path.splitext(value)[1]}"
+                        shutil.copy(value, os.path.join(path, fname))
+                        value = f"/in/{fname}"
 
             # add
             params[key] = value
