@@ -303,13 +303,31 @@ class Tool:
                         json.dump(value, f, indent=4)
                     value = f"/in/{fname}"
             
-            # Copy any file source
+            # Copy any file source and assets
             elif isinstance(value, str):
                 if self.parameters[key]['type'] == 'file':
                     fname = f"{key}{os.path.splitext(value)[1]}"
                     shutil.copy(value, os.path.join(path, fname))
                     value = f"/in/{fname}"
 
+                # copy assets, which can be files or folders and are just copied to the container
+                elif self.parameters[key]['type'] == 'asset':
+                    # try to copy directory
+                    try:
+                        dirname = os.path.basename(os.path.normpath(value))
+                        shutil.copytree(value, os.path.join(path, dirname), dirs_exist_ok=False)
+                        value = f"/in/{dirname}"
+                        
+                    # if copying directory fails, copy file
+                    except Exception as e1:
+                        try:
+                            fname = f"{key}{os.path.splitext(value)[1]}"
+                            shutil.copy(value, os.path.join(path, fname))
+                            value = f"/in/{fname}"
+                            
+                        # if copying the file also fails, raise both exceptions
+                        except Exception as e2:
+                            raise e1 from e2
             # add
             params[key] = value
         
