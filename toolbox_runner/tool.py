@@ -317,12 +317,14 @@ class Tool:
                         dirname = os.path.basename(os.path.normpath(value))
                         shutil.copytree(value, os.path.join(path, dirname), dirs_exist_ok=False)
                         value = f"/in/{dirname}"
+                        
                     # if copying directory fails, copy file
                     except Exception as e1:
                         try:
                             fname = f"{key}{os.path.splitext(value)[1]}"
                             shutil.copy(value, os.path.join(path, fname))
                             value = f"/in/{fname}"
+                            
                         # if copying the file also fails, raise both exceptions
                         except Exception as e2:
                             raise e1 from e2
