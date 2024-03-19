@@ -13,7 +13,7 @@ import pandas as pd
 from docker.errors import APIError
 
 from toolbox_runner.step import Step
-from toolbox_runner._docker import client
+from toolbox_runner.docker import client
 
 
 class Tool:
