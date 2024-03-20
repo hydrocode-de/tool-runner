@@ -23,6 +23,8 @@ class Data(BaseModel):
     example: Optional[str] = None
     extension: Optional[str] = None
 
+    # TODO: implement custom validators, that check each file for extension if given
+
 
 
 
