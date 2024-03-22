@@ -130,4 +130,5 @@ dmypy.json
 
 # project specific
 **/out/*
-test
+tool_mounts
+store.json

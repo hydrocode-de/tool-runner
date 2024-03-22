@@ -1,7 +1,7 @@
-pyyaml
-numpy
-pandas
-blinker
-networkx
-PyGithub
+pydantic
+pydantic_settings
 docker
+fastapi
+python-multipart
+uvicorn
+redis
