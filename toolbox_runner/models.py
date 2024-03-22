@@ -21,7 +21,7 @@ class Data(BaseModel):
     path: str
     description: Optional[str] = None
     example: Optional[str] = None
-    extension: Optional[str] = None
+    extension: Optional[str] | Optional[List[str]] = None
 
     # TODO: implement custom validators, that check each file for extension if given
 
@@ -29,12 +29,13 @@ class Data(BaseModel):
 
 
 class Tool(BaseModel):
+    # tool metadata
     name: str
     title: str
     description: str
     version: Optional[str] = None
     parameters: Dict[str, Parameter] = Field(repr=False)
-    data: Optional[List[str] | Dict[str, Data]] = None
+    data: None | List[str] | Dict[str, Data] = None
 
     # image metadata
     docker_image: str

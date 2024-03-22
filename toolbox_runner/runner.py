@@ -14,11 +14,11 @@ from pydantic import Field
 
 if TYPE_CHECKING:
     from toolbox_runner.models import Tool
-from toolbox_runner.docker import get_client
+from toolbox_runner.docker_client import get_client
 from toolbox_runner import __version__
 
-BASE_DIR = (Path(__file__) / 'tool_mounts').parent
-# BASE_DIR = Path('~/tool_runner').expanduser()
+BASE_DIR = str(Path(__file__).parent.parent / 'tool_mounts')
+# BASE_DIR = str(Path('~/tool_runner').expanduser())
 
 
 class ToolRunner(BaseSettings):
@@ -61,15 +61,19 @@ class ToolRunner(BaseSettings):
         input and output directory there.
         
         """
+        # check if we need a new location at all
+        if in_dir is None or out_dir is None:
+            base_dir = self.mount_path / self._get_tool_mount_name(tool_name=tool_name)
+        
         # create the input dir at the correct location
         if in_dir is None:
-            in_dir = self.mount_path / self._get_tool_mount_name(tool_name=tool_name) / 'in'
+            in_dir = base_dir / 'in'
         else:
             in_dir = Path(in_dir)
 
         # create the output dir at the correct location
         if out_dir is None:
-            out_dir = self.mount_path / self._get_tool_mount_name(tool_name=tool_name) / 'out'
+            out_dir = base_dir / 'out'
         else:
             out_dir = Path(out_dir)
 
@@ -104,8 +108,8 @@ class ToolRunner(BaseSettings):
             # copy the file
             shutil.copy(file_path, out_name)
 
-            # add to the out-mapping
-            copied_files[name] = str(out_name)
+            # add the path WITHIN THE CONTAINER to the out-mapping
+            copied_files[name] = f"/in/{out_name.name}"
 
         # return the mapping
         return copied_files
@@ -142,7 +146,7 @@ class ToolRunner(BaseSettings):
         in_dir, out_dir = self.create_mount_folders(tool_name=tool.name, in_dir=in_dir, out_dir=out_dir)
         
         # copy the input data
-        copied_data = self.copy_input_data(in_dir=in_dir, data_files=input_config['data'])
+        copied_data = self.copy_input_data(in_dir=in_dir, data_files=input_config[tool.name]['data'])
 
         # inject the new info to the parameterization and create the file
         self.create_input_parameterization(tool_name=tool.name, input_parameter=input_config, in_dir=in_dir, copied_data=copied_data)
@@ -151,7 +155,7 @@ class ToolRunner(BaseSettings):
         # successfully been initialized
         return (in_dir, out_dir)
     
-    def run(self, tool: 'Tool', in_dir: str, out_dir: str, extra_mounts: List[str] = [], extra_args: dict = {}, extra_env: Dict[str, str] = {}) -> None:
+    def run(self, tool: 'Tool', in_dir: str, out_dir: str, extra_mounts: List[str] = [], extra_args: dict = {}, extra_env: Dict[str, str] = {}) -> dict:
         """
         Run the tool at the given locations. At first it has to be initialized
         using the init_tool function.
@@ -204,12 +208,14 @@ class ToolRunner(BaseSettings):
                 f.write(stderr)
         
         # write metadata
+        # TODO: write a model for this as well
+        metadata = {
+            'runtime': t2 - t1,
+            'toolbox_runner.version': __version__,
+            'timestamp': datetime.now().isoformat()
+        }
         with open(Path(out_dir) / 'RUN_METADATA.json', 'w') as f:
-            json.dump({
-                'runtime': t2 - t1,
-                'toolbox_runner.version': __version__,
-                'timestamp': datetime.now().isoformat()
-            }, f, indent=4)
+            json.dump(metadata, f, indent=4)
 
         # return the output path
         return out_dir
