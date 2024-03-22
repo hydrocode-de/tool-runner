@@ -3,3 +3,5 @@ pydantic_settings
 docker
 fastapi
 python-multipart
+uvicorn
+redis
