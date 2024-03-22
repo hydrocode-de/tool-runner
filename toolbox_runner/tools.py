@@ -3,7 +3,7 @@ from typing import List
 from pydantic import BaseModel
 from yaml import load, Loader
 
-from toolbox_runner.docker import get_client
+from toolbox_runner.docker_client import get_client
 from toolbox_runner.models import Tool
 
 
@@ -49,6 +49,15 @@ class ToolSniffer(BaseModel):
         # update the payload for the parameter names
         for k, v in payload['parameters'].items():
             payload['parameters'][k].update({'name': k})
+        
+        # handle the data
+        if 'data' in payload:
+            data = payload['data']
+            if isinstance(data, list):
+                data = {'path': p for p in data}
+            else:
+                data = {k: {**v, 'path': k} for k, v in data.items()}
+            payload['data'] = data
 
         # use the Tool model to validate everything
         tool = Tool.model_validate(payload)
