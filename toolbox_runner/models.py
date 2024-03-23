@@ -1,4 +1,5 @@
 from typing import Optional, List, Dict, Type
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -24,8 +25,6 @@ class Data(BaseModel):
     extension: Optional[str] | Optional[List[str]] = None
 
     # TODO: implement custom validators, that check each file for extension if given
-
-
 
 
 class Tool(BaseModel):
@@ -74,3 +73,35 @@ class Tool(BaseModel):
         }
 
         return inputs
+
+
+class ToolJobStatus(StrEnum):
+    PENDING = 'pending'
+    RUNNING = 'running'
+    COMPLETED = 'completed'
+    FAILED = 'failed'
+
+class ToolResultStatus(StrEnum):
+    SUCCESS = 'success'
+    WARNING = 'warning'
+    ERROR = 'error'
+
+class ToolJob(BaseModel):
+    job_id: str
+    docker_image: str
+    tool_name: str
+    in_dir: str
+    out_dir: str
+    status: ToolJobStatus = ToolJobStatus.PENDING
+    result_status: Optional[ToolResultStatus] = None
+    error_message: Optional[str] = None
+    runtime: Optional[float] = None
+    timestamp: Optional[str] = None
+
+class ToolResultFile(BaseModel):
+    path: str
+    filename: str
+    size: Optional[int] = None
+    is_dir: bool
+    extension: Optional[str] = None
+    content_type: Optional[str] = None
