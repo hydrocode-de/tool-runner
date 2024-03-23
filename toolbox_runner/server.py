@@ -213,4 +213,12 @@ def run_job(job_id: str) -> ToolJob:
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("server:app", host="127.0.0.1", port=5555, reload=True)
+    import os
+
+    # get UVICORN settings
+    HOST = os.getenv("UVICORN_HOST", "127.0.0.1")
+    PORT = os.getenv("UVICORN_PORT", 8000)
+    RELOAD = os.getenv("UVICORN_RELOAD", True)
+
+    # run server
+    uvicorn.run("server:app", host=HOST, port=int(PORT), reload=bool(RELOAD))
