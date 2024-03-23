@@ -23,4 +23,6 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       MOUNT_BASE_DIR: /app/tool_mounts
+      UVICORN_HOST: 0.0.0.0
+      UVICORN_PORT: 5555
       
