@@ -7,6 +7,7 @@ import shutil
 
 from fastapi import FastAPI, HTTPException, UploadFile, Form
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 
 from toolbox_runner import __version__
 from toolbox_runner.handler import ToolHandler, ToolRunner, ToolSniffer
@@ -166,16 +167,19 @@ def get_result_file(job_id: str, file_name: str):
     job = handler.get_job(job_id=job_id)
 
     # check if all files are requested
-    if file_name in ('results.zip', 'results.tar.gz'):
-        compress_type = file_name.split('.')[1]
-        with tempfile.NamedTemporaryFile(suffix=compress_type) as f:
-            # create the archive
-            shutil.make_archive(f.name, 'zip' if compress_type == 'zip' else 'gztar', job.out_dir)
-            return FileResponse(
-                file_name, 
-                media_type='application/zip' if compress_type == 'zip' else 'application/gzip',
-                content_disposition_type="attachment"
-            )
+    if file_name  == 'results.zip':
+        # create a temporary file
+        zip = tempfile.NamedTemporaryFile()
+        
+        # create the archive
+        archive_name = shutil.make_archive(zip.name, 'zip', root_dir=job.out_dir, base_dir='.')
+        return FileResponse(
+            archive_name, 
+            filename='results.zip',
+            media_type='application/zip',
+            content_disposition_type="attachment",
+            background=BackgroundTask(shutil.rmtree, archive_name)
+        )
         
     else:
         # get the file
