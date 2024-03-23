@@ -8,3 +8,19 @@ services:
     volumes:
       - ./data/redis-data:/data
     command: redis-server --save 60 1 --loglevel warning
+  
+  tool-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5555:5555"
+    links:
+      - redis
+    volumes:
+      - ./tool_mounts:/app/tool_mounts
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MOUNT_BASE_DIR: /app/tool_mounts
+      
