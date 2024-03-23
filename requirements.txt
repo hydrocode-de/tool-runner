@@ -1,6 +1,7 @@
 pydantic
 pydantic_settings
 docker
+yaml
 fastapi
 python-multipart
 uvicorn
