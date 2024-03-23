@@ -7,6 +7,7 @@ import shutil
 
 from fastapi import FastAPI, HTTPException, UploadFile, Form
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.background import BackgroundTask
 
 from toolbox_runner import __version__
@@ -19,6 +20,15 @@ app = FastAPI(
     version=__version__,
     title="Async tool-specs enabled Container Runner",
     description="Asynchronous dispatching server for containerized tools implementing tool-specs interface."
+)
+
+# add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # for now we will use a global handler
