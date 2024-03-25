@@ -19,7 +19,8 @@ from toolbox_runner.docker_client import get_client
 app = FastAPI(
     version=__version__,
     title="Async tool-specs enabled Container Runner",
-    description="Asynchronous dispatching server for containerized tools implementing tool-specs interface."
+    description="Asynchronous dispatching server for containerized tools implementing tool-specs interface.",
+    root_path="/api/v1"
 )
 
 # add CORS middleware
@@ -50,6 +51,17 @@ def index():
 def get_tools() -> List[str]:
     # get the current list of tools
     return list(handler.tool_map.keys())
+
+@app.get("/tools/full")
+def get_full_tool_list() -> List[Tool]:
+    # container for the tools
+    tools = []
+    # get the current list of tools
+    for tool_name in handler.tool_map.keys():
+        # get the tool specification from the handler
+        tool = handler.get_tool(tool_name)
+        tools.append(tool)
+    return tools
 
 @app.get("/tool/{tool_name}")
 def get_tool(tool_name: str) -> Tool:
