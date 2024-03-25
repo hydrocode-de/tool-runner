@@ -19,6 +19,7 @@ services:
       - redis
     volumes:
       - ./tool_mounts:/app/tool_mounts
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
