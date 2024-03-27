@@ -165,28 +165,21 @@ class ToolHandler(BaseSettings):
         
         # create the job
         # this returns the mount points in case they were not pre-defined
-        did_error = False
         try:
             in_dir, out_dir = self.runner.init_tool(tool=tool, parameter=parameters, data=data, in_dir=in_dir, out_dir=out_dir)
         except Exception as e:
-            did_error = str(e)
-            if in_dir is None:
-                in_dir = 'UNSET'
-            if out_dir is None:
-                out_dir = 'UNSET'
-            warnings.warn(f"TOOL INIT FAILED: {str(e)}")
+            raise RuntimeError(f"Could not initialize the tool {tool_name} with the given parameters and data. ERROR: {str(e)}")
             
-        finally:
-            # crete the tool job entry
-            toolJob = ToolJob(
-                job_id=str(uuid.uuid4()),
-                docker_image=docker_image,
-                tool_name=tool_name,
-                in_dir=in_dir,
-                out_dir=out_dir,
-                status=ToolJobStatus.PENDING if not did_error else ToolJobStatus.FAILED,
-                error_message=did_error if did_error else None
-            )
+ 
+        # crete the tool job entry
+        toolJob = ToolJob(
+            job_id=str(uuid.uuid4()),
+            docker_image=docker_image,
+            tool_name=tool_name,
+            in_dir=in_dir,
+            out_dir=out_dir,
+            status=ToolJobStatus.PENDING,
+        )
 
         # set the job in the store
         self._hset(f"tooljob:{toolJob.job_id}", toolJob.model_dump())

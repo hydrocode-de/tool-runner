@@ -143,11 +143,14 @@ def create_job(
         dir = None
     
     # create a new job
-    job = handler.create_job(tool_name, parameters=parameters, data=local_data)
-
-    # delete the temporary directory
-    if dir is not None:
-        dir.cleanup()
+    try:
+        job = handler.create_job(tool_name, parameters=parameters, data=local_data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        # delete the temporary directory
+        if dir is not None:
+            dir.cleanup()
 
     return job
 
