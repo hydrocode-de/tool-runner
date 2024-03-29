@@ -138,7 +138,10 @@ def create_job(
             p = Path(dir.name) / file.filename
             with open(p, 'wb') as f:
                 f.write(file.file.read())
-            local_data[name_mapping.get(p.stem, p.stem)] = str(p)
+            
+            # local_data is ie: 'my_specific_filename.csv': 'input_name'
+            # when the file name is not in the mapping, we assume the stem is the 'input_name
+            local_data[name_mapping.get(file.filename, p.stem)] = str(p)
     else:
         dir = None
     
@@ -224,6 +227,7 @@ def run_job(job_id: str) -> ToolJob:
     job = handler.run_job(job_id=job_id)
 
     return job
+
 
 
 if __name__ == '__main__':
