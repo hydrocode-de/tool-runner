@@ -26,6 +26,9 @@ class ToolRunner(BaseSettings):
     name_mode: Literal['uuid', 'tool_name', 'random'] = Field('random', description="Defines how the tool_runner will name the mount directories for a tool run.")
     rename_input_files: bool = True
 
+    # replace the mount base dir with this dir if inside a container
+    container_replace_mount: Optional[str] = None
+
     @property
     def mount_path(self):
         p = Path(self.mount_base_dir)
@@ -160,12 +163,33 @@ class ToolRunner(BaseSettings):
         Run the tool at the given locations. At first it has to be initialized
         using the init_tool function.
         """
+        # TODO: if the tool runner is running in the docker container, the mount paths need to be 
+        # adjusted. anything below the base mount dir (in the container) needs to be replaced with the 
+        # the path on the host.
+        if self.container_replace_mount is not None:
+            # we are in a container and need to replace the bath to in_dir and out_dir
+            # in the container with the host path
+            out_mount_point = Path(out_dir).relative_to(self.mount_path)
+            host_out_dir = Path(self.container_replace_mount) / out_mount_point
+
+            in_mount_point = Path(in_dir).relative_to(self.mount_path)
+            host_in_dir = Path(self.container_replace_mount) / in_mount_point
+        else:
+            host_in_dir = in_dir
+            host_out_dir = out_dir
+
+        # no mapping needed, as tool-runner is not running in a container
+        if not Path(in_dir).exists():
+            raise ValueError(f"Input directory for tool results: {host_in_dir} does not exist. If tool-runner is running in a container, set the mount path on the host as: CONTAINER_REPLACE_MOUNT.")
+        if not Path(out_dir).exists():
+            raise ValueError(f"Output directory for tool results: {host_out_dir} does not exist. If tool-runner is running in a container, set the mount path on the host as: CONTAINER_REPLACE_MOUNT.")
+
         # build the run args
         run_args = dict(
             image=tool.docker_image,
             volumes=[
-                f"{Path(in_dir).resolve()}:/in",
-                f"{Path(out_dir).resolve()}:/out",
+                f"{host_in_dir.resolve()}:/in",
+                f"{host_out_dir.resolve()}:/out",
                 *extra_mounts
             ],
             environment=[

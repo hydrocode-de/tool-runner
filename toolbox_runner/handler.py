@@ -168,8 +168,8 @@ class ToolHandler(BaseSettings):
         try:
             in_dir, out_dir = self.runner.init_tool(tool=tool, parameter=parameters, data=data, in_dir=in_dir, out_dir=out_dir)
         except Exception as e:
-            raise RuntimeError(f"Could not initialize the tool {tool_name} with the given parameters and data. ERROR: {str(e)}")
-            
+            raise RuntimeError(f"Could not initialize the tool {tool_name} with the given parameters and data. ERROR: {str(e)}")    
+ 
  
         # crete the tool job entry
         toolJob = ToolJob(
