@@ -6,6 +6,7 @@ from mimetypes import guess_type
 import shutil
 
 from fastapi import FastAPI, HTTPException, UploadFile, Form
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.background import BackgroundTask
@@ -41,7 +42,7 @@ handler = ToolHandler(runner=runner)
 WHITELIST = ['ghcr.io/vforwater/', 'ghcr.io/hydrocode-de/', 'ghcr.io/camels-de/', 'ghcr.io/kit-hyd/']
 
 
-@app.get("/")
+@app.get("/info")
 def index():
     return {
         'version': __version__
@@ -235,6 +236,9 @@ def delete_job(job_id: str, keep_files: bool = False):
     
     return {'deleted': job_id, 'message': f'Job {job_id} deleted successfully'}
 
+
+# mount the static files directory
+app.mount("/", StaticFiles(directory = Path(__file__).parent / "static", html=True), name="static")
 
 if __name__ == '__main__':
     import uvicorn
