@@ -133,3 +133,4 @@ dmypy.json
 tool_mounts
 store.json
 dump.rdb
+toolbox_runner/static/*
