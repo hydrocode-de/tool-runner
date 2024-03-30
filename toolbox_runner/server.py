@@ -166,7 +166,6 @@ def get_jobs() -> List[ToolJob]:
 def get_job(job_id: str) -> ToolJob:
     return handler.get_job(job_id=job_id)
 
-
 @app.get("/job/{job_id}/results")
 def get_job_results(job_id: str) -> List[ToolResultFile]:
     # get the job
@@ -220,7 +219,6 @@ def get_result_file(job_id: str, file_name: str):
         # guess the mime type
         mime = guess_type(p)[0]
         return FileResponse(p, media_type=mime if mime is not None else 'application/octet-stream')
-    
 
 @app.post("/job/{job_id}/run")
 def run_job(job_id: str) -> ToolJob:
@@ -228,6 +226,14 @@ def run_job(job_id: str) -> ToolJob:
 
     return job
 
+@app.delete("/job/{job_id}")
+def delete_job(job_id: str, keep_files: bool = False):
+    try:
+        handler.delete_job(job_id, keep_mount_files=keep_files)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Could not delete job '{job_id}': {str(e)}")
+    
+    return {'deleted': job_id, 'message': f'Job {job_id} deleted successfully'}
 
 
 if __name__ == '__main__':

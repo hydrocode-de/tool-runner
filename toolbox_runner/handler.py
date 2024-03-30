@@ -207,17 +207,27 @@ class ToolHandler(BaseSettings):
 
         # run the tool
         try:
-            metadata = self.runner.run(tool=tool, in_dir=job.in_dir, out_dir=job.out_dir, extra_args=extra_args, extra_mounts=extra_mounts, extra_env=extra_env)
+            self.runner.run(tool=tool, in_dir=job.in_dir, out_dir=job.out_dir, extra_args=extra_args, extra_mounts=extra_mounts, extra_env=extra_env)
             
             # in any other case mark the job as completed
             job.status = ToolJobStatus.COMPLETED
             job.result_status = ToolResultStatus.SUCCESS
-            job.runtime = metadata['runtime']
-            job.timestamp = metadata['timestamp']
         except Exception as e:
             job.status = ToolJobStatus.FAILED
             job.error_message = str(e)
-            
+
+        # get the metadata from the out_path
+        try:
+            metadata = json.loads((Path(job.out_dir) / 'metadata.json').read_text())
+        except FileNotFoundError:
+            metadata = {}
+            job.result_status = ToolResultStatus.WARNING
+            job.error_message = "No metadata.json file found in the output directory. This is not a critical error, but the job might not have completed successfully."
+        
+        # set the metadata
+        job.runtime = metadata.get('runtime')
+        job.timestamp = metadata.get('timestamp')
+        
         # here we can also check the out_dir for an STDERR.log
         err_path = Path(job.out_dir) / 'STDERR.log'
         if err_path.exists():
@@ -253,6 +263,8 @@ class ToolHandler(BaseSettings):
             if job.in_dir is not None:
                 shutil.rmtree(job.in_dir, ignore_errors=True)
                 shutil.rmtree(job.out_dir, ignore_errors=True)
+                if Path(job.in_dir).parent.exists():
+                    shutil.rmtree(Path(job.in_dir).parent, ignore_errors=True)
         
         # delete the metadata itself
         self.redis_client.delete(f"tooljob:{job_id}")
